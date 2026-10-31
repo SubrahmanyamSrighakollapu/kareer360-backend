@@ -1,0 +1,96 @@
+generator client { provider = "prisma-client-js" }
+datasource db { provider = "postgresql"; url = env("DATABASE_URL") }
+
+model Student {
+  id String @id @default(cuid())
+  fullName String
+  dateOfBirth DateTime
+  educationLevel String
+  institution String?
+  city String
+  email String?
+  contactNumber String?
+  consentConfirmed Boolean
+  createdAt DateTime @default(now())
+  sessions AssessmentSession[]
+}
+
+model AssessmentDefinition {
+  id String @id @default(cuid())
+  version String @unique
+  title String
+  active Boolean @default(true)
+  questions Question[]
+  sessions AssessmentSession[]
+}
+
+model Question {
+  id String @id
+  ordinal Int
+  statement String
+  questionSetVersion String
+  definitionId String
+  definition AssessmentDefinition @relation(fields: [definitionId], references: [id])
+  mappings QuestionMapping[]
+}
+
+model QuestionMapping {
+  id String @id @default(cuid())
+  questionId String
+  dimension String
+  facet String?
+  weight Float @default(1)
+  question Question @relation(fields: [questionId], references: [id])
+}
+
+model AssessmentSession {
+  id String @id @default(cuid())
+  accessToken String @unique
+  idempotencyKey String? @unique
+  status String @default("IN_PROGRESS")
+  assessmentVersion String
+  questionSetVersion String
+  scoringVersion String
+  reportTemplateVersion String
+  studentId String
+  definitionId String
+  student Student @relation(fields: [studentId], references: [id])
+  definition AssessmentDefinition @relation(fields: [definitionId], references: [id])
+  answers Answer[]
+  result AssessmentResult?
+  report GeneratedReport?
+  submittedAt DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Answer {
+  id String @id @default(cuid())
+  sessionId String
+  questionId String
+  value Int
+  session AssessmentSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  @@unique([sessionId, questionId])
+}
+
+model AssessmentResult {
+  id String @id @default(cuid())
+  sessionId String @unique
+  snapshot Json
+  scoringVersion String
+  createdAt DateTime @default(now())
+  session AssessmentSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+}
+
+model GeneratedReport {
+  id String @id @default(cuid())
+  sessionId String @unique
+  accessToken String @unique
+  status String @default("PENDING")
+  storagePath String?
+  errorMessage String?
+  templateVersion String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  session AssessmentSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+}

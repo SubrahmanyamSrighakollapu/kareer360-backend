@@ -1,0 +1,38 @@
+{
+  "name": "kareer360-backend",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/server.ts",
+    "build": "tsc",
+    "start": "node dist/src/server.js",
+    "test": "vitest run",
+    "prisma:generate": "prisma generate",
+    "prisma:push": "prisma db push",
+    "seed": "tsx prisma/seed.ts",
+    "sample:pdf": "tsx src/scripts/samplePdf.ts"
+  },
+  "dependencies": {
+    "@prisma/client": "6.12.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.5.0",
+    "express": "^5.1.0",
+    "helmet": "^8.1.0",
+    "puppeteer": "^25.16.0",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.17",
+    "@types/express": "^5.0.1",
+    "@types/node": "^22.15.3",
+    "@types/react": "^19.1.2",
+    "@types/react-dom": "^19.1.2",
+    "prisma": "6.12.0",
+    "tsx": "^4.19.3",
+    "typescript": "^5.8.3",
+    "vitest": "^5.0.5"
+  }
+}

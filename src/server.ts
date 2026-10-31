@@ -1,0 +1,30 @@
+import "dotenv/config";
+import fs from "node:fs";
+import path from "node:path";
+import express from "express";
+import cors from "cors";
+import helmet from "helmet";
+import { ZodError } from "zod";
+import { questions } from "./data/questions.js";
+import { VERSIONS } from "./domain.js";
+import { scoreAssessment } from "./scoring/engine.js";
+import { store } from "./store.js";
+import { answersSchema, studentSchema, submitSchema } from "./validation.js";
+import { generateReferencePdf } from "./report/referenceGenerator.js";
+import { renderReferenceReport } from "./report/referenceTemplate.js";
+
+const app=express(),port=Number(process.env.PORT||4000);
+app.use(helmet({contentSecurityPolicy:false}));app.use(cors({origin:process.env.FRONTEND_URL||"http://localhost:3000"}));app.use(express.json({limit:"128kb"}));
+const bearer=(req:express.Request)=>req.headers.authorization?.replace(/^Bearer\s+/i,"")||String(req.query.token||"");
+app.get("/health",(_req,res)=>res.json({status:"ok",versions:VERSIONS}));
+app.post("/api/assessments/start",(req,res)=>{const student=studentSchema.parse(req.body);const s=store.create(student);res.status(201).json({sessionId:s.id,accessToken:s.token,student:s.student,questions,answers:s.answers,versions:VERSIONS})});
+app.get("/api/assessments/:id",(req,res)=>{const s=store.session(req.params.id,bearer(req));if(!s)return res.status(404).json({error:{code:"NOT_FOUND",message:"Assessment session not found"}});res.json({sessionId:s.id,student:s.student,questions,answers:s.answers,status:s.status})});
+app.put("/api/assessments/:id/answers",(req,res)=>{const s=store.session(req.params.id,bearer(req));if(!s)return res.status(404).json({error:{code:"NOT_FOUND",message:"Assessment session not found"}});if(s.status!=="IN_PROGRESS")return res.status(409).json({error:{code:"ALREADY_SUBMITTED",message:"This assessment has already been submitted"}});const {answers}=answersSchema.parse(req.body);for(const a of answers)s.answers[a.questionId]=a.value;res.json({saved:true,answered:Object.keys(s.answers).length})});
+app.post("/api/assessments/:id/submit",async(req,res)=>{const s=store.session(req.params.id,bearer(req));if(!s)return res.status(404).json({error:{code:"NOT_FOUND",message:"Assessment session not found"}});const {idempotencyKey}=submitSchema.parse(req.body);if(s.status==="SUBMITTED"){if(s.idempotencyKey!==idempotencyKey)return res.status(409).json({error:{code:"ALREADY_SUBMITTED",message:"This assessment has already been submitted"}});const existing=store.unsafeReport(s.reportId!);return res.json({reportId:s.reportId,reportToken:existing?.token,status:existing?.status||"GENERATING"})}const values=questions.map(q=>s.answers[q.id]);if(values.some(v=>v===undefined))return res.status(422).json({error:{code:"INCOMPLETE_ASSESSMENT",message:`Answer all 80 questions before submitting`,details:{answered:Object.keys(s.answers).length}}});s.result=scoreAssessment(values);s.status="SUBMITTED";s.idempotencyKey=idempotencyKey;const report=store.createReport(s.id);s.reportId=report.id;void generateReferencePdf({student:s.student,result:s.result,assessmentDate:new Date().toISOString()},report.id).then(p=>{report.path=p;report.status="READY"}).catch(e=>{report.error=e instanceof Error?e.message:"PDF generation failed";report.status="FAILED"});res.status(202).json({reportId:report.id,reportToken:report.token,status:report.status})});
+app.get("/api/reports/:id/status",(req,res)=>{const r=store.report(req.params.id,bearer(req));if(!r)return res.status(404).json({error:{code:"NOT_FOUND",message:"Report not found"}});res.json({reportId:r.id,status:r.status,error:r.error})});
+app.post("/api/reports/:id/retry",(req,res)=>{const r=store.report(req.params.id,bearer(req));if(!r)return res.status(404).json({error:{code:"NOT_FOUND",message:"Report not found"}});if(r.status==="GENERATING")return res.status(202).json({reportId:r.id,status:r.status});const s=store.unsafeSession(r.sessionId);if(!s?.result)return res.status(409).json({error:{code:"RESULT_UNAVAILABLE",message:"Saved report data is unavailable"}});r.status="GENERATING";r.error=undefined;void generateReferencePdf({student:s.student,result:s.result,assessmentDate:s.createdAt},r.id).then(p=>{r.path=p;r.status="READY"}).catch(e=>{r.error=e instanceof Error?e.message:"PDF generation failed";r.status="FAILED"});res.status(202).json({reportId:r.id,status:r.status})});
+app.get("/api/reports/:id/preview",(req,res)=>{const r=store.report(req.params.id,bearer(req));if(!r)return res.status(404).send("Report not found");const s=store.unsafeSession(r.sessionId);if(!s?.result)return res.status(409).send("Report data unavailable");res.type("html").send(renderReferenceReport({student:s.student,result:s.result,assessmentDate:s.createdAt}))});
+app.get("/api/reports/:id/download",(req,res)=>{const r=store.report(req.params.id,bearer(req));if(!r)return res.status(404).json({error:{code:"NOT_FOUND",message:"Report not found"}});if(r.status!=="READY"||!r.path||!fs.existsSync(r.path))return res.status(409).json({error:{code:"NOT_READY",message:"Report is not ready"}});res.download(r.path,path.basename(r.path))});
+app.use((err:unknown,_req:express.Request,res:express.Response,_next:express.NextFunction)=>{if(err instanceof ZodError)return res.status(400).json({error:{code:"VALIDATION_ERROR",message:"Please check the submitted information",details:err.flatten()}});console.error(err);res.status(500).json({error:{code:"INTERNAL_ERROR",message:"Something went wrong. Your saved answers are safe."}})});
+app.listen(port,()=>console.log(`Kareer360 API listening on ${port}`));
+
