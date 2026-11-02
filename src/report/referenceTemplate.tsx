@@ -30,8 +30,9 @@ export function ReferenceReport({ data }: { data: ReferenceReportData }) {
       <table className="details"><tbody>
         <tr><td>Name</td><td>{student.fullName}</td><td>Date of assessment</td><td>{new Date(data.assessmentDate).toLocaleDateString("en-IN")}</td></tr>
         <tr><td>Date of birth</td><td>{student.dateOfBirth}</td><td>Class / level</td><td>{student.educationLevel}</td></tr>
-        <tr><td>Email</td><td>{student.email || "—"}</td><td>Contact</td><td>{student.contactNumber || "—"}</td></tr>
-        <tr><td>Institution</td><td>{student.institution || "—"}</td><td>City</td><td>{student.city}</td></tr>
+        <tr><td>Profession</td><td>{student.profession}</td><td>Gender</td><td>{student.gender}</td></tr>
+        <tr><td>Email</td><td>{student.email}</td><td>Contact</td><td>{student.contactNumber}</td></tr>
+        <tr><td>Institution</td><td>{student.institution || "—"}</td><td>Location</td><td>{student.city}, {student.country}</td></tr>
       </tbody></table>
       <Section>Multiple Intelligence Theory</Section>
       <p className="intro">There are eight vital kinds of intelligences by which one person differs from another. Multiple Intelligence theory explains that a strong aptitude in one intelligence does not necessarily imply the same aptitude in another. The profile below shows the relative distribution of the student’s eight intelligences.</p>

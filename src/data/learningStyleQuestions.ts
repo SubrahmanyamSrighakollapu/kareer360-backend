@@ -1,0 +1,36 @@
+export type LearningStyleQuestion = { id: string; ordinal: number; statement: string; options: [string,string,string] };
+
+const rows: Array<[string,string,string,string]> = [
+  ["When I operate new equipment I generally:","read the instructions first","listen to an explanation from someone who has used it before","go ahead and have a go; I can figure it out as I use it"],
+  ["When I need directions for travelling I usually:","look at a map","ask for spoken directions","follow my nose and maybe use a compass"],
+  ["When I cook a new dish, I like to:","follow a written recipe","call a friend for an explanation","follow my instincts, testing as I cook"],
+  ["If I am teaching someone something new, I tend to:","write instructions down for them","give them a verbal explanation","demonstrate first and then let them have a go"],
+  ["I tend to say:","watch how I do it","listen to me explain","you have a go"],
+  ["During my free time I most enjoy:","going to museums and galleries","listening to music and talking to my friends","playing sport or doing practical activities"],
+  ["When I go shopping for clothes, I tend to:","imagine what they would look like on","discuss them with the shop staff","try them on and test them out"],
+  ["When I am choosing a holiday I usually:","read lots of brochures","listen to recommendations from friends","imagine what it would be like to be there"],
+  ["If I was buying a new car, I would:","read reviews in newspapers and magazines","discuss what I need with my friends","test-drive lots of different types"],
+  ["When I am learning a new skill, I am most comfortable:","watching what the teacher is doing","talking through with the teacher exactly what I am supposed to do","giving it a try myself and working it out as I go"],
+  ["If I am choosing food from a menu, I tend to:","imagine what the food will look like","talk through the options in my head or with someone","imagine what the food will taste like"],
+  ["When I listen to a band, I cannot help:","watching the band members and other people in the audience","listening to the lyrics and the beats","moving in time with the music"],
+  ["When I concentrate, I most often:","focus on the words or pictures in front of me","discuss the problem and possible solutions in my head","move around, fiddle with pens and pencils, or touch things"],
+  ["I choose household furnishings because I like:","their colours and how they look","the descriptions the salespeople give me","their textures and how they feel to touch"],
+  ["My first memory is of:","looking at something","being spoken to","doing something"],
+  ["When I am anxious, I:","visualise the worst-case scenarios","talk over in my head what worries me most","cannot sit still and move around constantly"],
+  ["I feel especially connected to other people because of:","how they look","what they say to me","how they make me feel"],
+  ["When I revise for an exam, I generally:","write lots of revision notes and diagrams","talk over my notes, alone or with other people","imagine making the movement or creating the formula"],
+  ["If I am explaining something to someone, I tend to:","show them what I mean","explain it in different ways until they understand","encourage them to try while I talk them through it"],
+  ["I really love:","watching films, photography, art, or people-watching","listening to music, radio, or talking to friends","taking part in sport, food experiences, or dancing"],
+  ["Most of my free time is spent:","watching television","talking to friends","doing physical activity or making things"],
+  ["When I first contact a new person, I usually:","arrange a face-to-face meeting","talk to them on the telephone","meet while doing an activity or sharing a meal"],
+  ["I first notice how people:","look and dress","sound and speak","stand and move"],
+  ["If I am angry, I tend to:","replay in my mind what upset me","raise my voice and tell people how I feel","physically demonstrate my anger"],
+  ["I find it easiest to remember:","faces","names","things I have done"],
+  ["I think you can tell if someone is lying if:","they avoid looking at you","their voice changes","they give me an unusual feeling"],
+  ["When I meet an old friend:","I say, ‘It is great to see you!’","I say, ‘It is great to hear from you!’","I give them a hug or a handshake"],
+  ["I remember things best by:","writing notes or keeping printed details","saying them aloud or repeating key points in my head","doing and practising the activity or imagining it being done"],
+  ["If I have to complain about faulty goods, I am most comfortable:","writing a letter","complaining over the phone","taking the item back to the store"],
+  ["I tend to say:","I see what you mean","I hear what you are saying","I know how you feel"],
+];
+
+export const learningStyleQuestions: LearningStyleQuestion[] = rows.map(([statement,a,b,c],i)=>({id:`ls${i+1}`,ordinal:i+1,statement,options:[a,b,c]}));

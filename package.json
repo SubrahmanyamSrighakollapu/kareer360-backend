@@ -11,7 +11,8 @@
     "prisma:generate": "prisma generate",
     "prisma:push": "prisma db push",
     "seed": "tsx prisma/seed.ts",
-    "sample:pdf": "tsx src/scripts/samplePdf.ts"
+    "sample:pdf": "tsx src/scripts/samplePdf.ts",
+    "sample:learning-pdf": "tsx src/scripts/sampleLearningStylePdf.ts"
   },
   "dependencies": {
     "@prisma/client": "6.12.0",

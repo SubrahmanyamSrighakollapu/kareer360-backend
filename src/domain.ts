@@ -7,7 +7,8 @@ export const VERSIONS = {
 
 export type StudentDetails = {
   fullName: string; dateOfBirth: string; educationLevel: string; institution?: string;
-  city: string; email?: string; contactNumber?: string; consentConfirmed: boolean;
+  profession: string; gender: "Male"|"Female"|"Non-binary"|"Prefer not to say"|"Other";
+  city: string; country: string; email: string; contactNumber: string; consentConfirmed: boolean;
 };
 export type IntelligenceKey = "logical"|"musical"|"naturalist"|"verbal"|"interpersonal"|"kinesthetic"|"visual"|"intrapersonal";
 export type Score = { key: string; label: string; raw: number; percent: number; rank: number };
@@ -17,3 +18,6 @@ export type AssessmentResult = {
   multipleIntelligences: Score[]; mackenzieDomains: RatedScore[]; riasec: RatedScore[];
   careerRecommendations: CareerScore[]; versions: typeof VERSIONS;
 };
+export type LearningStyleKey = "visual"|"auditory"|"kinesthetic";
+export type LearningStyleScore = {key:LearningStyleKey;label:string;count:number;percent:number;rank:number};
+export type LearningStyleResult = {scores:LearningStyleScore[];dominant:LearningStyleKey[]};
