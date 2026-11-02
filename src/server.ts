@@ -101,7 +101,13 @@ app.post("/api/reports/:id/retry",async(req,res)=>{const report=await loadReport
 app.get("/api/reports/:id/preview",async(req,res)=>{const report=await loadReport(req.params.id,bearer(req));if(!report)return res.status(404).send("Report not found");if(report.kind!==PSYCHOMETRIC)return res.status(409).send("Use the PDF download for the learning styles report.");const saved=report.session.results.find(x=>x.kind===PSYCHOMETRIC);if(!saved)return res.status(409).send("Report data unavailable");res.type("html").send(renderReferenceReport({student:studentResponse(report.session.student),result:saved.snapshot as unknown as AssessmentResult,assessmentDate:report.session.createdAt.toISOString()}))});
 app.get("/api/reports/:id/download",async(req,res)=>{const report=await loadReport(req.params.id,bearer(req));if(!report)return res.status(404).json({error:{code:"NOT_FOUND",message:"Report not found"}});if(report.status!=="READY"||!report.storagePath||!fs.existsSync(report.storagePath))return res.status(409).json({error:{code:"NOT_READY",message:"Report is not ready"}});res.download(report.storagePath,path.basename(report.storagePath))});
 
-app.use((err:unknown,_req:express.Request,res:express.Response,_next:express.NextFunction)=>{if(err instanceof ZodError)return res.status(400).json({error:{code:"VALIDATION_ERROR",message:"Please check the submitted information",details:err.flatten()}});console.error(err);res.status(500).json({error:{code:"INTERNAL_ERROR",message:"Something went wrong. Your saved answers are safe."}})});
+app.use((err:unknown,_req:express.Request,res:express.Response,_next:express.NextFunction)=>{
+ if(err instanceof ZodError)return res.status(400).json({error:{code:"VALIDATION_ERROR",message:"Please check the submitted information",details:err.flatten()}});
+ console.error(err);
+ if(err instanceof Prisma.PrismaClientInitializationError)return res.status(503).json({error:{code:"DATABASE_UNAVAILABLE",message:"The database is unavailable. Check DATABASE_URL and confirm PostgreSQL is accepting connections."}});
+ if(err instanceof Prisma.PrismaClientKnownRequestError&&(err.code==="P2021"||err.code==="P2022"))return res.status(503).json({error:{code:"DATABASE_SCHEMA_OUTDATED",message:"The database schema is out of date. Apply the pending Prisma migrations and restart the API."}});
+ res.status(500).json({error:{code:"INTERNAL_ERROR",message:"Something went wrong. Your saved answers are safe."}})
+});
 const server=app.listen(port,"127.0.0.1",()=>console.log(`Kareer360 API listening on 127.0.0.1:${port}`));
 const shutdown=()=>server.close(()=>void prisma.$disconnect().finally(()=>process.exit(0)));
 process.on("SIGTERM",shutdown);process.on("SIGINT",shutdown);
