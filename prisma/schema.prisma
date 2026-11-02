@@ -1,5 +1,11 @@
-generator client { provider = "prisma-client-js" }
-datasource db { provider = "postgresql"; url = env("DATABASE_URL") }
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
 
 model Student {
   id String @id @default(cuid())
@@ -7,9 +13,12 @@ model Student {
   dateOfBirth DateTime
   educationLevel String
   institution String?
+  profession String
+  gender String
   city String
-  email String?
-  contactNumber String?
+  country String
+  email String
+  contactNumber String
   consentConfirmed Boolean
   createdAt DateTime @default(now())
   sessions AssessmentSession[]
@@ -47,6 +56,7 @@ model AssessmentSession {
   id String @id @default(cuid())
   accessToken String @unique
   idempotencyKey String? @unique
+  learningStyleIdempotencyKey String? @unique
   status String @default("IN_PROGRESS")
   assessmentVersion String
   questionSetVersion String
@@ -57,8 +67,8 @@ model AssessmentSession {
   student Student @relation(fields: [studentId], references: [id])
   definition AssessmentDefinition @relation(fields: [definitionId], references: [id])
   answers Answer[]
-  result AssessmentResult?
-  report GeneratedReport?
+  results AssessmentResult[]
+  reports GeneratedReport[]
   submittedAt DateTime?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -75,16 +85,19 @@ model Answer {
 
 model AssessmentResult {
   id String @id @default(cuid())
-  sessionId String @unique
+  sessionId String
+  kind String
   snapshot Json
   scoringVersion String
   createdAt DateTime @default(now())
   session AssessmentSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  @@unique([sessionId, kind])
 }
 
 model GeneratedReport {
   id String @id @default(cuid())
-  sessionId String @unique
+  sessionId String
+  kind String
   accessToken String @unique
   status String @default("PENDING")
   storagePath String?
@@ -93,4 +106,5 @@ model GeneratedReport {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   session AssessmentSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  @@unique([sessionId, kind])
 }
